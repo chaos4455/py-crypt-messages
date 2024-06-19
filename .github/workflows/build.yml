@@ -10,51 +10,53 @@ jobs:
     runs-on: windows-latest
 
     steps:
-    - name: Check if pip is installed
-      run: |
-        python -m pip --version || (curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && python get-pip.py)
-      continue-on-error: true
-
     - name: Checkout repository
       uses: actions/checkout@v2
-      with:
-        repository: chaos4455/py-crypt-messages
-        ref: main
 
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
         python-version: '3.11'
 
-    - name: Install dependencies
+    - name: Download custom icon
       run: |
-        python -m pip install --upgrade pip
-        python -m pip install pyqt5==5.15.4 pyqt5-tools==5.15.4 cryptography==35.0.0 pyinstaller
+        mkdir icons
+        Invoke-WebRequest -Uri "https://github.com/chaos4455/py-crypt-messages/raw/main/icon.png" -OutFile "icons/icon.png"
+
+    - name: Install PyInstaller and Pillow
+      run: |
+        python -m pip install pyinstaller Pillow
+
+    - name: Install PyQt5 and dependencies
+      run: |
+        python -m pip install PyQt5 PyQt5-tools
 
     - name: Build executable
       run: |
-        pyinstaller --onefile --noconsole --icon=icon.ico encryptamensagens3.py
-      env:
-        ICON_PATH: ${{ github.workspace }}/icon.png
+        pyinstaller --onefile --noconsole --icon=icons/icon.png https://github.com/chaos4455/py-crypt-messages/blob/main/encryptamensagens3.py
 
-    - name: Check output directory
+    - name: Check output
       run: |
         dir dist
 
     - name: Create versioned folder
-      id: create_folder
       run: |
-        if (!(Test-Path -Path programa)) {
+        if (Test-Path programa) {
+          Write-Host "Directory 'programa' already exists."
+        } else {
           New-Item -ItemType Directory -Path programa
         }
         $timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
         Move-Item dist\encryptamensagens3.exe programa\app_v_${timestamp}.exe
 
-    - name: Commit executable
-      if: success()
+    - name: Configure Git
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
+
+    - name: Commit executable
+      if: success()
+      run: |
         git add programa\app_v_*.exe
         git commit -m "Add executable for version $timestamp"
         git push

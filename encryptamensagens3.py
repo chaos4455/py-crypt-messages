@@ -7,9 +7,8 @@ from PyQt5.QtCore import Qt
 from cryptography.hazmat.primitives.asymmetric import rsa, padding
 from cryptography.hazmat.primitives import serialization, hashes
 
-
 class RSAApp(QWidget):
-    def __init__(self):
+    def __init__(self, private_key):
         super().__init__()
         self.setWindowTitle("RSA Cryptography App")
         self.setFixedSize(600, 400)
@@ -74,8 +73,8 @@ class RSAApp(QWidget):
         self.decrypt_button.clicked.connect(self.decrypt_message)
         self.message_input.textChanged.connect(self.detect_bits)
 
-        # Gerar chave RSA
-        self.private_key = rsa.generate_private_key(public_exponent=65537, key_size=4096)
+        # Armazenar a chave privada recebida como parâmetro
+        self.private_key = private_key
 
     def generate_password(self):
         password = ''.join(random.choices(string.ascii_letters + string.digits + string.punctuation, k=64))
@@ -92,7 +91,7 @@ class RSAApp(QWidget):
         header = f"Bits: {selected_bits}\n".encode()
         message_with_header = header + message
 
-        # Criptografar a mensagem
+        # Criptografar a mensagem usando a chave privada
         encrypted_message = self.private_key.public_key().encrypt(
             message_with_header,
             padding.OAEP(
@@ -109,7 +108,7 @@ class RSAApp(QWidget):
         password = self.password_input.text()
         encrypted_message = bytes.fromhex(self.result_output.toPlainText())
 
-        # Descriptografar a mensagem
+        # Descriptografar a mensagem usando a chave privada
         decrypted_message = self.private_key.decrypt(
             encrypted_message,
             padding.OAEP(
@@ -153,9 +152,11 @@ class RSAApp(QWidget):
             elif bits_str == '4096':
                 self.bits_4096_button.setChecked(True)
 
-
 if __name__ == "__main__":
     app = QApplication(sys.argv)
+
+    # Gerar chave RSA fora da classe e passá-la para RSAApp
+    private_key = rsa.generate_private_key(public_exponent=65537, key_size=4096)
 
     # Estilo da aplicação
     palette = QPalette()
@@ -173,6 +174,6 @@ if __name__ == "__main__":
     font.setPointSize(10)
     app.setFont(font)
 
-    rsa_app = RSAApp()
+    rsa_app = RSAApp(private_key)  # Passando a chave privada como parâmetro
     rsa_app.show()
     sys.exit(app.exec_())

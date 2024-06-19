@@ -10,6 +10,11 @@ jobs:
     runs-on: windows-latest  # alterado para executar em ambiente Windows
 
     steps:
+    - name: Check if pip is installed
+      run: |
+        python -m pip --version || (curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && python get-pip.py)
+      continue-on-error: true  # continua mesmo se a instalação do pip falhar
+
     - name: Checkout py-crypt-messages repository
       uses: actions/checkout@v2
       with:
@@ -21,13 +26,9 @@ jobs:
       with:
         python-version: '3.11'  # ajuste conforme sua versão de Python
 
-    - name: Download custom icon
-      run: |
-        Invoke-WebRequest -Uri "https://github.com/chaos4455/py-crypt-messages/raw/main/icon.png" -OutFile "icon.png"
-
     - name: Install dependencies
       run: |
-        python -m pip install -r requirements.txt
+        python -m pip install PyQt5==5.15.4 cryptography==35.0.0
 
     - name: Build executable
       run: |

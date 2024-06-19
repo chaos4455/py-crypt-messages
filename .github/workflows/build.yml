@@ -31,9 +31,13 @@ jobs:
       run: |
         python -m pip install PyQt5 PyQt5-tools
 
+    - name: Download Python script
+      run: |
+        Invoke-WebRequest -Uri "https://raw.githubusercontent.com/chaos4455/py-crypt-messages/main/encryptamensagens3.py" -OutFile "encryptamensagens3.py"
+
     - name: Build executable
       run: |
-        pyinstaller --onefile --noconsole --icon=icons/icon.png https://github.com/chaos4455/py-crypt-messages/blob/main/encryptamensagens3.py
+        pyinstaller --onefile --noconsole --icon=icons/icon.png encryptamensagens3.py
 
     - name: Check output
       run: |

@@ -37,7 +37,7 @@ jobs:
 
     - name: Build executable
       run: |
-        pyinstaller --onefile --noconsole --icon=icons/icon.png encryptamensagens3.py
+        pyinstaller --onefile --noconsole --icon=icons/icon.png --hidden-import cryptography.hazmat.backends.openssl encryptamensagens3.py
 
     - name: Check output
       run: |

@@ -1,0 +1,60 @@
+name: Build and Deploy Executable
+
+on:
+  push:
+    branches:
+      - main  # ajuste conforme sua branch principal
+
+jobs:
+  build:
+    runs-on: windows-latest  # alterado para executar em ambiente Windows
+
+    steps:
+    - name: Checkout py-crypt-messages repository
+      uses: actions/checkout@v2
+      with:
+        repository: chaos4455/py-crypt-messages
+        ref: main
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.11'  # ajuste conforme sua versão de Python
+
+    - name: Download custom icon
+      run: |
+        Invoke-WebRequest -Uri "https://github.com/chaos4455/py-crypt-messages/raw/main/icon.png" -OutFile "icon.png"
+
+    - name: Install dependencies
+      run: |
+        python -m pip install -r requirements.txt
+
+    - name: Build executable
+      run: |
+        pyinstaller --onefile --noconsole --icon=icon.png encryptamensagens3.py
+
+    - name: Check output
+      run: |
+        dir dist  # Verificar se o executável foi gerado corretamente no Windows
+
+    - name: Create versioned folder
+      run: |
+        if (Test-Path programa) {
+          Write-Host "Directory 'programa' already exists."
+        } else {
+          New-Item -ItemType Directory -Path programa
+        }
+        $timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
+        Move-Item dist\encryptamensagens3.exe programa\app_v_${timestamp}.exe
+
+    - name: Configure Git
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+
+    - name: Commit executable
+      if: success()
+      run: |
+        git add programa\app_v_*.exe
+        git commit -m "Add executable for version $timestamp"
+        git push
